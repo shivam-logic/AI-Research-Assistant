@@ -58,7 +58,6 @@ def youtube_summary(request: YouTubeRequest):
         # Get transcript from YouTube
         fetcher = YouTubeTranscriptApi()
         transcript = fetcher.fetch(video_id)
-        full_text = " ".join([entry.text for entry in transcript])
 
         # Convert transcript to plain text
         full_text = " ".join([entry.text for entry in transcript])
