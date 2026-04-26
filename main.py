@@ -1,7 +1,9 @@
 import os
+import io
+import PyPDF2
 from dotenv import load_dotenv
 from groq import Groq
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File
 from pydantic import BaseModel
 from youtube_transcript_api import YouTubeTranscriptApi
 
@@ -57,7 +59,7 @@ def youtube_summary(request: YouTubeRequest):
 
         # Get transcript from YouTube
         fetcher = YouTubeTranscriptApi()
-        transcript = fetcher.fetch(video_id)
+        transcript = fetcher.fetch(video_id, languages=["en", "hi"])
 
         # Convert transcript to plain text
         full_text = " ".join([entry.text for entry in transcript])
@@ -75,6 +77,49 @@ def youtube_summary(request: YouTubeRequest):
         return {
             "url": request.url,
             "summary": response.choices[0].message.content
+        }
+
+    except Exception as e:
+        return {"error": str(e)}
+
+# RAG route - upload PDF and ask questions
+@app.post("/pdf-qa")
+async def pdf_qa(file: UploadFile = File(...), question: str = "Summarize this document"):
+    try:
+        # Read the uploaded PDF file
+        pdf_content = await file.read()
+
+        # Extract text from PDF
+        pdf_reader = PyPDF2.PdfReader(io.BytesIO(pdf_content))
+
+        # Get text from all pages
+        full_text = ""
+        for page in pdf_reader.pages:
+            full_text += page.extract_text()
+
+        # Check if we got any text
+        if not full_text.strip():
+            return {"error": "Could not extract text from PDF"}
+
+        # Send to Groq with the question
+        prompt = f"""Based on the following document content, answer this question: {question}
+
+Document content:
+{full_text[:4000]}
+
+Please provide a clear and accurate answer based only on the document."""
+
+        # Call Groq and get response
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        # Return the answer
+        return {
+            "question": question,
+            "answer": response.choices[0].message.content,
+            "pages_processed": len(pdf_reader.pages)
         }
 
     except Exception as e:
