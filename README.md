@@ -23,9 +23,10 @@
 |---------|-------------|
 | 🔍 **Topic Research** | Enter any topic and get a detailed AI-generated summary |
 | 🎥 **YouTube Summarizer** | Paste any YouTube URL and get key points extracted |
+| 📄 **PDF Q&A (RAG)** | Upload any PDF and ask questions — AI answers from the document |
 | ✅ **Data Validation** | Pydantic models ensure clean input handling |
 | 🛡️ **Error Handling** | Graceful error responses instead of crashes |
-| 📄 **Auto Documentation** | Swagger UI generated automatically by FastAPI |
+| 📚 **Auto Documentation** | Swagger UI generated automatically by FastAPI |
 
 ---
 
@@ -35,6 +36,7 @@
 - **AI Model:** Groq API (LLaMA 3.3 70B)
 - **Language:** Python 3.14
 - **Data Validation:** Pydantic
+- **PDF Processing:** PyPDF2
 - **Deployment:** Render
 - **Version Control:** GitHub
 
@@ -81,6 +83,22 @@ Takes a YouTube URL and returns a structured summary of the video content.
 }
 ```
 
+### POST /pdf-qa
+Upload any PDF file and ask a question. AI answers based only on the document content.
+
+**Form Data:**
+- `file` — PDF file to upload
+- `question` — Your question about the document
+
+**Response:**
+```json
+{
+  "question": "What is this document about?",
+  "answer": "AI-generated answer based on the PDF...",
+  "pages_processed": 3
+}
+```
+
 ---
 
 ## ⚙️ Run Locally
@@ -124,12 +142,25 @@ AI-Research-Assistant/
 └── README.md            # Project documentation
 ---
 
+## 🏗️ Architecture
+User Request
+↓
+FastAPI (receives request)
+↓
+Pydantic (validates data)
+↓
+Groq API — LLaMA 3.3 70B (processes with AI)
+↓
+JSON Response (returned to user)
+---
+
 ## 🔮 Upcoming Features
 
-- [ ] RAG — PDF upload and document Q&A
-- [ ] Multi-language support
-- [ ] Response caching
-- [ ] Authentication
+- [ ] Vector database integration for large document search
+- [ ] Multi-document RAG support
+- [ ] Conversation memory
+- [ ] Authentication and rate limiting
+- [ ] LangGraph agentic workflow
 
 ---
 
